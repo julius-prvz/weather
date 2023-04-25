@@ -18,13 +18,16 @@ def index(request):
         if form.is_valid():
             new_city = form.cleaned_data['name']
             existing_city_count = City.objects.filter(name=new_city).count()
-            
+
             if existing_city_count == 0:
 
-                r = requests.get(url.format(new_city))
+                r = requests.get(url.format(new_city)).json()
 
                 if r['cod'] == 200:
-                    form.save()
+                    city = form.save(commit=False)
+                    city.timezone = r['timezone']
+                    city.save()
+
                 else:
                     err_msg = 'City does not exist in the world!'
             else:
@@ -57,7 +60,7 @@ def index(request):
         weather_data.append(city_weather)
 
     context = {
-        'weather_data' : weather_data, 
+        'weather_data' : weather_data,
         'form' : form,
         'message' : message,
         'message_class' : message_class
